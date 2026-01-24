@@ -152,3 +152,23 @@ Validation and proper HTTP status codes
 Home page with links for API testing
 
 Global 404 handler for API routes# ticketnest
+
+
+# TicketNest
+
+Live URL: https://ticketnest-3kbp.onrender.com/
+
+## Description
+TicketNest is an online ticket booking system built with Node.js, Express, and MongoDB.
+
+## Features
+- Full CRUD functionality
+- REST API
+- MongoDB Atlas
+- Production deployment
+- Web UI using fetch()
+
+## Setup
+npm install  
+npm start
+
