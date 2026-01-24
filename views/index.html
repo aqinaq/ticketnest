@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TicketNest</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<nav>
+  <a href="/">Home</a>
+  <a href="/search.html">Search</a>
+  <a href="/item.html">Events</a>
+  <a href="/about">About</a>
+  <a href="/contact">Contact</a>
+  
+</nav>
+  <h1>🎟 TicketNest</h1>
+
+<section class="carousel">
+  <h2> Trending Events</h2>
+
+  <div class="carousel-track">
+    <div class="carousel-item">
+      <img src="/images/liveconcert.jpg" alt="Live Concert">
+      <span>Live Concert</span>
+    </div>
+
+    <div class="carousel-item">
+      <img src="/images/musicfest.webp" alt="Music Festival">
+      <span>Music Festival</span>
+    </div>
+
+    <div class="carousel-item">
+      <img src="/images/sports.jpg" alt="Sports Event">
+      <span>World Cup 2026</span>
+    </div>
+
+    <div class="carousel-item">
+      <img src="/images/theatre.jpg" alt="Theatre Show">
+      <span>Theatre Night</span>
+    </div>
+  </div>
+</section>
+<section class="news">
+  <h2>📰 Latest Events</h2>
+
+  <div class="news-list">
+    <article class="news-card">
+      <h4>Global Music Tour Announced</h4>
+      <p>New artists added to the 2026 world tour lineup.</p>
+      <a href="#">View Event →</a>
+    </article>
+
+    <article class="news-card">
+      <h4>Championship Finals Tickets Live</h4>
+      <p>Limited seats available for this weekend’s finals.</p>
+      <a href="#">Book Now →</a>
+    </article>
+
+    <article class="news-card">
+      <h4>Indie Film Festival</h4>
+      <p>Three-day showcase of independent filmmakers.</p>
+      <a href="#">Explore →</a>
+    </article>
+  </div>
+</section>
+
+<div class="container">
+
+  </ul>
+</div>
+<h1>🎟 TicketNest Events</h1>
+
+<form id="eventForm">
+  <input id="title" placeholder="Title" required />
+  <input id="location" placeholder="Location" required />
+  <input type="date" id="date" required />
+  <button>Add Event</button>
+</form>
+
+<ul id="events"></ul>
+
+<script>
+const api = "/api/events";
+const list = document.getElementById("events");
+const form = document.getElementById("eventForm");
+
+async function loadEvents() {
+  const res = await fetch(api);
+  const events = await res.json();
+  list.innerHTML = "";
+
+  events.forEach(e => {
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <b>${e.title}</b> – ${e.location}
+      <button onclick="del('${e._id}')">Delete</button>
+    `;
+    list.appendChild(li);
+  });
+}
+
+form.onsubmit = async (e) => {
+  e.preventDefault();
+  await fetch(api, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      title: title.value,
+      location: location.value,
+      date: date.value
+    })
+  });
+  form.reset();
+  loadEvents();
+};
+
+async function del(id) {
+  await fetch(`${api}/${id}`, { method: "DELETE" });
+  loadEvents();
+}
+
+loadEvents();
+</script>
+
+<footer>
+  <p>
+    © 2026 TicketNest · Built with Express.js
+  </p>
+</footer>
+
+</body>
+</html>

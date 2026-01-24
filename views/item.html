@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Items – TicketNest</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<nav>
+  <a href="/">Home</a>
+  <a href="/search.html">Search</a>
+  <a href="/item.html">Events</a>
+  <a href="/about">About</a>
+  <a href="/contact">Contact</a>
+  
+</nav>
+<div class="container">
+  <h1>Events</h1>
+
+  <p>
+    This page demonstrates route parameters
+    Each link sends a different ID to the server
+  </p>
+<div class="container">
+  <h1>Events</h1>
+  <p>All upcoming events:</p>
+  <ul id="events-list">
+    <!-- Events will be inserted here -->
+  </ul>
+</div>
+<script>
+  async function loadEvents() {
+    try {
+      const res = await fetch('/api/events');
+      if (!res.ok) throw new Error('Failed to fetch events');
+
+      const events = await res.json();
+      const list = document.getElementById('events-list');
+      list.innerHTML = ''; // clear placeholder
+
+      events.forEach(e => {
+        const eventDate = new Date(e.date);
+        const formattedDate = eventDate.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        });
+
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <strong>${e.title}</strong><br>
+          ${e.location} — ${formattedDate}<br>
+          <a href="/item/${e._id}">View Details</a>
+        `;
+        list.appendChild(li);
+      });
+    } catch (err) {
+      console.error(err);
+      document.getElementById('events-list').innerHTML = '<li>Failed to load events.</li>';
+    }
+  }
+
+  loadEvents();
+</script>
+
+
+</div>
+
+</body>
+</html>

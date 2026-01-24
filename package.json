@@ -1,0 +1,19 @@
+{
+  "name": "projectn13",
+  "version": "1.0.0",
+  "description": "TicketNest is an online ticket booking web application that allows users to browse events and book tickets easily. The system is designed to handle events such as movies, concerts, and sports matches.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "mongodb": "^7.0.0"
+  }
+}
