@@ -15,7 +15,7 @@
   <a href="/contact">Contact</a>
   
 </nav>
-  <h1>🎟 TicketNest</h1>
+  <h1>TicketNest</h1>
 
 <section class="carousel">
   <h2> Trending Events</h2>
@@ -80,14 +80,21 @@
 </form>
 
 <ul id="events"></ul>
-
 <script>
 const api = "/api/events";
 const list = document.getElementById("events");
 const form = document.getElementById("eventForm");
 
+const titleInput = document.getElementById("title");
+const locationInput = document.getElementById("location");
+const dateInput = document.getElementById("date");
+
 async function loadEvents() {
   const res = await fetch(api);
+  if (!res.ok) {
+    console.error("Failed to load events:", await res.text());
+    return;
+  }
   const events = await res.json();
   list.innerHTML = "";
 
@@ -95,34 +102,50 @@ async function loadEvents() {
     const li = document.createElement("li");
     li.innerHTML = `
       <b>${e.title}</b> – ${e.location}
-      <button onclick="del('${e._id}')">Delete</button>
+      <button type="button" onclick="del('${e._id}')">Delete</button>
     `;
     list.appendChild(li);
   });
 }
 
-form.onsubmit = async (e) => {
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
-  await fetch(api, {
+
+  const payload = {
+    title: titleInput.value.trim(),
+    location: locationInput.value.trim(),
+    date: dateInput.value
+  };
+
+  const res = await fetch(api, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      title: title.value,
-      location: location.value,
-      date: date.value
-    })
+    body: JSON.stringify(payload)
   });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    alert(err.error || "Failed to create event");
+    return;
+  }
+
   form.reset();
   loadEvents();
-};
+});
 
 async function del(id) {
-  await fetch(`${api}/${id}`, { method: "DELETE" });
+  const res = await fetch(`${api}/${id}`, { method: "DELETE" });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    alert(err.error || "Failed to delete event");
+    return;
+  }
   loadEvents();
 }
 
 loadEvents();
 </script>
+
 
 <footer>
   <p>
