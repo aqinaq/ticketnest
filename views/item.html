@@ -1,71 +1,311 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Items – TicketNest</title>
-  <link rel="stylesheet" href="/style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Events - TicketNest</title>
+  <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
 
-<nav>
-  <a href="/">Home</a>
-  <a href="/search.html">Search</a>
-  <a href="/item.html">Events</a>
-  <a href="/about">About</a>
-  <a href="/contact">Contact</a>
-  
-</nav>
-<div class="container">
-  <h1>Events</h1>
+<header class="topbar">
+  <div class="wrap nav">
+    <a class="brand" href="/">
+      <span class="brand-badge" aria-hidden="true"></span>
+      <span>TicketNest</span>
+    </a>
+    <nav class="navlinks">
+      <a href="/" id="nav-home">Home</a>
+      <a href="/item.html" id="nav-events" class="active">Events</a>
+      <a href="/info.html" id="nav-info">Info</a>
+      <a href="/profile.html" id="nav-profile">Profile</a>
+    </nav>
+  </div>
+</header>
 
-  <p>
-    This page demonstrates route parameters
-    Each link sends a different ID to the server
-  </p>
-<div class="container">
-  <h1>Events</h1>
-  <p>All upcoming events:</p>
-  <ul id="events-list">
-    <!-- Events will be inserted here -->
-  </ul>
-</div>
+<main class="wrap">
+
+  <section class="hero">
+    <div class="card pad">
+      <h1 class="h1">Events</h1>
+      <p class="small muted" id="status">Loading…</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="grid">
+      <div class="card pad">
+        <h2>Search</h2>
+        <form class="form" id="searchForm">
+          <div>
+            <label for="q">Search term</label>
+            <input id="q" name="q" placeholder="concert, movie, sports..." />
+          </div>
+          <div class="btnrow">
+            <button class="btn" type="submit">Search</button>
+            <button class="btn" type="button" id="clearSearch">Clear</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card pad">
+        <h2 id="formTitle">Add new event</h2>
+
+        <form class="form" id="eventForm">
+          <input type="hidden" id="editId" />
+
+          <div class="row">
+            <div>
+              <label for="title">Title</label>
+              <input id="title" placeholder="Title" required />
+            </div>
+
+            <div>
+              <label for="location">Location</label>
+              <input id="location" placeholder="Location" required />
+            </div>
+
+            <div>
+              <label for="date">Date</label>
+              <input type="date" id="date" required />
+            </div>
+          </div>
+
+          <div class="btnrow">
+            <button class="btn primary" id="saveBtn" type="submit">Add Event</button>
+            <button class="btn" id="cancelEdit" type="button" style="display:none;">Cancel Edit</button>
+          </div>
+
+          <div class="small muted">
+            Add = <code>POST /api/events</code> · Edit = <code>PUT /api/events/:id</code>
+          </div>
+        </form>
+      </div>
+
+      <div class="card pad">
+        <h2>Quick tips</h2>
+        <ul class="small muted" style="margin:8px 0 0; padding-left:18px;">
+          <li>Edit fills the form with existing values</li>
+          <li>Delete removes instantly after API success</li>
+          <li>Extra fields from your DB won’t break the table</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="card pad">
+      <h2>All events</h2>
+
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Location</th>
+              <th>Date</th>
+              <th style="width:220px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="eventsBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <div>© 2026 TicketNest</div>
+    <div class="small">Built with Express.js · Frontend + API connected</div>
+  </div>
+</footer>
+
 <script>
-  async function loadEvents() {
-    try {
-      const res = await fetch('/api/events');
-      if (!res.ok) throw new Error('Failed to fetch events');
+  const api = "/api/events";
 
-      const events = await res.json();
-      const list = document.getElementById('events-list');
-      list.innerHTML = ''; // clear placeholder
+  const statusEl = document.getElementById("status");
+  const bodyEl = document.getElementById("eventsBody");
 
-      events.forEach(e => {
-        const eventDate = new Date(e.date);
-        const formattedDate = eventDate.toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric'
-        });
+  const searchForm = document.getElementById("searchForm");
+  const qInput = document.getElementById("q");
+  const clearSearchBtn = document.getElementById("clearSearch");
 
-        const li = document.createElement('li');
-        li.innerHTML = `
-          <strong>${e.title}</strong><br>
-          ${e.location} — ${formattedDate}<br>
-          <a href="/item/${e._id}">View Details</a>
-        `;
-        list.appendChild(li);
-      });
-    } catch (err) {
-      console.error(err);
-      document.getElementById('events-list').innerHTML = '<li>Failed to load events.</li>';
+  const form = document.getElementById("eventForm");
+  const formTitle = document.getElementById("formTitle");
+  const editId = document.getElementById("editId");
+  const titleInput = document.getElementById("title");
+  const locationInput = document.getElementById("location");
+  const dateInput = document.getElementById("date");
+  const saveBtn = document.getElementById("saveBtn");
+  const cancelEditBtn = document.getElementById("cancelEdit");
+
+  function escapeHtml(s) {
+    return String(s ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function fmtDate(d) {
+    if (!d) return "";
+    const dt = new Date(d);
+    if (Number.isNaN(dt.getTime())) return String(d);
+    return dt.toLocaleDateString();
+  }
+
+  function setEditMode(on, eventObj) {
+    if (on) {
+      formTitle.textContent = "Edit event";
+      saveBtn.textContent = "Save Changes";
+      cancelEditBtn.style.display = "inline-flex";
+
+      editId.value = eventObj._id;
+      titleInput.value = eventObj.title ?? "";
+      locationInput.value = eventObj.location ?? "";
+
+      const iso = eventObj.date ? new Date(eventObj.date).toISOString().slice(0,10) : "";
+      dateInput.value = iso;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      formTitle.textContent = "Add new event";
+      saveBtn.textContent = "Add Event";
+      cancelEditBtn.style.display = "none";
+
+      editId.value = "";
+      form.reset();
     }
   }
 
-  loadEvents();
+  async function loadEvents(query = "") {
+    statusEl.textContent = "Loading…";
+    const url = query ? `${api}?q=${encodeURIComponent(query)}` : api;
+
+    try {
+      const res = await fetch(url);
+      if (!res.ok) {
+        statusEl.textContent = `Failed to load events: HTTP ${res.status}`;
+        return;
+      }
+
+      const events = await res.json();
+      if (!Array.isArray(events) || events.length === 0) {
+        statusEl.textContent = query ? "No events match your search." : "No events found.";
+        bodyEl.innerHTML = "";
+        return;
+      }
+
+      statusEl.textContent = `Loaded ${events.length} event(s).`;
+
+      bodyEl.innerHTML = events.map(ev => `
+        <tr>
+          <td>${escapeHtml(ev.title)}</td>
+          <td>${escapeHtml(ev.location)}</td>
+          <td>${escapeHtml(fmtDate(ev.date))}</td>
+          <td>
+            <div class="btnrow" style="margin:0;">
+              <button class="btn ok" type="button" data-action="edit" data-id="${escapeHtml(ev._id)}">Edit</button>
+              <button class="btn danger" type="button" data-action="delete" data-id="${escapeHtml(ev._id)}">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join("");
+
+      window.__eventsCache = events;
+
+    } catch (err) {
+      console.error(err);
+      statusEl.textContent = "Error loading events (check console).";
+    }
+  }
+
+  bodyEl.addEventListener("click", async (e) => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+
+    const action = btn.dataset.action;
+    const id = btn.dataset.id;
+    if (!action || !id) return;
+
+    if (action === "edit") {
+      const found = (window.__eventsCache || []).find(x => String(x._id) === String(id));
+      if (!found) return;
+      setEditMode(true, found);
+      return;
+    }
+
+    if (action === "delete") {
+      const ok = confirm("Delete this event?");
+      if (!ok) return;
+
+      try {
+        const res = await fetch(`${api}/${encodeURIComponent(id)}`, { method: "DELETE" });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          alert(err.error || "Failed to delete event");
+          return;
+        }
+        // refresh with current search term
+        loadEvents(qInput.value.trim());
+      } catch (err) {
+        console.error(err);
+        alert("Delete failed (check console).");
+      }
+    }
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const payload = {
+      title: titleInput.value.trim(),
+      location: locationInput.value.trim(),
+      date: dateInput.value
+    };
+
+    const isEdit = !!editId.value;
+    const url = isEdit ? `${api}/${encodeURIComponent(editId.value)}` : api;
+    const method = isEdit ? "PUT" : "POST";
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || (isEdit ? "Failed to update event" : "Failed to create event"));
+        return;
+      }
+
+      setEditMode(false);
+      loadEvents(qInput.value.trim());
+
+    } catch (err) {
+      console.error(err);
+      alert("Request failed (check console).");
+    }
+  });
+
+  cancelEditBtn.addEventListener("click", () => setEditMode(false));
+
+  searchForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    loadEvents(qInput.value.trim());
+  });
+
+  clearSearchBtn.addEventListener("click", () => {
+    qInput.value = "";
+    loadEvents("");
+  });
+
+  window.addEventListener("DOMContentLoaded", () => loadEvents(""));
 </script>
-
-
-</div>
 
 </body>
 </html>

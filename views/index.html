@@ -1,156 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>TicketNest</title>
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
 
-<nav>
-  <a href="/">Home</a>
-  <a href="/search.html">Search</a>
-  <a href="/item.html">Events</a>
-  <a href="/about">About</a>
-  <a href="/contact">Contact</a>
-  
-</nav>
-  <h1>TicketNest</h1>
+<header class="topbar">
+  <div class="wrap nav">
+    <a class="brand" href="/">
+      <span class="brand-badge" aria-hidden="true"></span>
+      <span>TicketNest</span>
+    </a>
+    <nav class="navlinks">
+      <a href="/" id="nav-home" class="active">Home</a>
+      <a href="/item.html" id="nav-events">Events</a>
+      <a href="/info.html" id="nav-info">Info</a>
+      <a href="/profile.html" id="nav-profile">Profile</a>
+    </nav>
+  </div>
+</header>
 
-<section class="carousel">
-  <h2> Trending Events</h2>
+<main class="wrap">
 
-  <div class="carousel-track">
-    <div class="carousel-item">
-      <img src="/images/liveconcert.jpg" alt="Live Concert">
-      <span>Live Concert</span>
+  <section class="hero">
+  <div class="card pad hero-card">
+    <h1 class="h1">Book events without the chaos</h1>
+    <p class="sub">
+      TicketNest is a simple ticket platform with a real API behind it.
+      Browse, search, and manage events.
+    </p>
+
+    <div class="btnrow">
+      <a class="btn primary" href="/item">Open Events</a>
+      <a class="btn" href="/info">About us / Contact us</a>
     </div>
 
-    <div class="carousel-item">
-      <img src="/images/musicfest.webp" alt="Music Festival">
-      <span>Music Festival</span>
-    </div>
-
-    <div class="carousel-item">
-      <img src="/images/sports.jpg" alt="Sports Event">
-      <span>World Cup 2026</span>
-    </div>
-
-    <div class="carousel-item">
-      <img src="/images/theatre.jpg" alt="Theatre Show">
-      <span>Theatre Night</span>
+    <div class="pills">
+      <span class="pill">Express routes</span>
+      <span class="pill">Fetch API</span>
+      <span class="pill">CRUD</span>
+      <span class="pill">Search</span>
     </div>
   </div>
 </section>
-<section class="news">
-  <h2>📰 Latest Events</h2>
 
-  <div class="news-list">
-    <article class="news-card">
-      <h4>Global Music Tour Announced</h4>
-      <p>New artists added to the 2026 world tour lineup.</p>
-      <a href="#">View Event →</a>
-    </article>
+  <section class="section carousel">
+    <h2>Trending Events</h2>
+    <div class="carousel-track">
+      <div class="carousel-item">
+        <img src="/images/liveconcert.jpg" alt="Live Concert" />
+        <span>Live Concert</span>
+      </div>
+      <div class="carousel-item">
+        <img src="/images/musicfest.webp" alt="Music Festival" />
+        <span>Music Festival</span>
+      </div>
+      <div class="carousel-item">
+        <img src="/images/sports.jpg" alt="Sports Event" />
+        <span>World Cup 2026</span>
+      </div>
+      <div class="carousel-item">
+        <img src="/images/theatre.jpg" alt="Theatre Show" />
+        <span>Theatre Night</span>
+      </div>
+    </div>
+  </section>
 
-    <article class="news-card">
-      <h4>Championship Finals Tickets Live</h4>
-      <p>Limited seats available for this weekend’s finals.</p>
-      <a href="#">Book Now →</a>
-    </article>
+  <section class="section news">
+    <h2>Latest Events</h2>
 
-    <article class="news-card">
-      <h4>Indie Film Festival</h4>
-      <p>Three-day showcase of independent filmmakers.</p>
-      <a href="#">Explore →</a>
-    </article>
+    <div class="news-list">
+      <article class="news-card">
+        <h4>Global Music Tour Announced</h4>
+        <p>New artists added to the 2026 world tour lineup.</p>
+        <a href="/item.html">View in Events →</a>
+      </article>
+
+      <article class="news-card">
+        <h4>Championship Finals Tickets Live</h4>
+        <p>Limited seats available for this weekend’s finals.</p>
+        <a href="/item.html">Book Now →</a>
+      </article>
+
+      <article class="news-card">
+        <h4>Indie Film Festival</h4>
+        <p>Three-day showcase of independent filmmakers.</p>
+        <a href="/item.html">Explore →</a>
+      </article>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <div>© 2026 TicketNest</div>
+    <div class="small">Built with Express.js · Frontend + API connected</div>
   </div>
-</section>
-
-<div class="container">
-
-  </ul>
-</div>
-<h1>🎟 TicketNest Events</h1>
-
-<form id="eventForm">
-  <input id="title" placeholder="Title" required />
-  <input id="location" placeholder="Location" required />
-  <input type="date" id="date" required />
-  <button>Add Event</button>
-</form>
-
-<ul id="events"></ul>
-<script>
-const api = "/api/events";
-const list = document.getElementById("events");
-const form = document.getElementById("eventForm");
-
-const titleInput = document.getElementById("title");
-const locationInput = document.getElementById("location");
-const dateInput = document.getElementById("date");
-
-async function loadEvents() {
-  const res = await fetch(api);
-  if (!res.ok) {
-    console.error("Failed to load events:", await res.text());
-    return;
-  }
-  const events = await res.json();
-  list.innerHTML = "";
-
-  events.forEach(e => {
-    const li = document.createElement("li");
-    li.innerHTML = `
-      <b>${e.title}</b> – ${e.location}
-      <button type="button" onclick="del('${e._id}')">Delete</button>
-    `;
-    list.appendChild(li);
-  });
-}
-
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const payload = {
-    title: titleInput.value.trim(),
-    location: locationInput.value.trim(),
-    date: dateInput.value
-  };
-
-  const res = await fetch(api, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    alert(err.error || "Failed to create event");
-    return;
-  }
-
-  form.reset();
-  loadEvents();
-});
-
-async function del(id) {
-  const res = await fetch(`${api}/${id}`, { method: "DELETE" });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    alert(err.error || "Failed to delete event");
-    return;
-  }
-  loadEvents();
-}
-
-loadEvents();
-</script>
-
-
-<footer>
-  <p>
-    © 2026 TicketNest · Built with Express.js
-  </p>
 </footer>
 
 </body>

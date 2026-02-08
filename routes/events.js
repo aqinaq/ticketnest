@@ -1,122 +1,143 @@
+// routes/events.js
 const express = require("express");
-const { ObjectId } = require("mongodb");
-const { getDB } = require("../database/mongo");
-
 const router = express.Router();
+const Event = require("../models/Event");
 
-function isValidId(id) {
-  return ObjectId.isValid(id) && String(new ObjectId(id)) === id;
+function requireAuth(req, res, next) {
+  if (!req.session?.userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  next();
 }
-
-// GET /api/events?location=&q=&sortBy=&order=&fields=
-router.get("/", async (req, res) => {
+async function requireOwner(req, res, next) {
   try {
-    const db = getDB();
+    const ev = await Event.findById(req.params.id);
+    if (!ev) return res.status(404).json({ error: "Event not found" });
 
-    const filter = {};
-    if (req.query.location) {
-      filter.location = { $regex: req.query.location, $options: "i" };
+    if (String(ev.owner) !== String(req.session.userId)) {
+      return res.status(403).json({ error: "Forbidden" });
     }
-    if (req.query.q) {
-      filter.title = { $regex: req.query.q, $options: "i" };
-    }
-
-    const sort = {};
-    if (req.query.sortBy) {
-      sort[req.query.sortBy] = req.query.order === "desc" ? -1 : 1;
-    }
-
-    const projection = req.query.fields
-      ? Object.fromEntries(req.query.fields.split(",").map((f) => [f.trim(), 1]))
-      : undefined;
-
-    const events = await db
-      .collection("events")
-      .find(filter, projection ? { projection } : undefined)
-      .sort(Object.keys(sort).length ? sort : { date: 1 })
-      .toArray();
-
-    return res.status(200).json(events);
+    req.event = ev;
+    next();
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: "Database error" });
+    return res.status(500).json({ error: "Server error" });
+  }
+}
+
+
+async function requireOwner(req, res, next) {
+  try {
+    const event = await Event.findById(req.params.id);
+    if (!event) return res.status(404).json({ error: "Not found" });
+
+    if (String(event.owner) !== String(req.session.userId)) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+    next();
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+}
+
+// GET /api/events or /api/events?q=term  (PUBLIC)
+router.get("/", async (req, res) => {
+  try {
+    const q = String(req.query.q || "").trim();
+
+    const filter = q
+      ? {
+          $or: [
+            { title: { $regex: q, $options: "i" } },
+            { location: { $regex: q, $options: "i" } },
+          ],
+        }
+      : {};
+
+    const events = await Event.find(filter).sort({ date: 1, createdAt: -1 });
+    res.json(events);
+  } catch (err) {
+    console.error("GET /api/events error:", err);
+    res.status(500).json({ error: "Failed to load events" });
   }
 });
 
-// GET /api/events/:id
-router.get("/:id", async (req, res) => {
-  const { id } = req.params;
-  if (!isValidId(id)) return res.status(400).json({ error: "Invalid id" });
-
+// POST /api/events  (LOGIN REQUIRED)
+router.post("/", requireAuth, async (req, res) => {
   try {
-    const db = getDB();
-    const event = await db.collection("events").findOne({ _id: new ObjectId(id) });
-    if (!event) return res.status(404).json({ error: "Event not found" });
-    return res.status(200).json(event);
-  } catch {
-    return res.status(500).json({ error: "Database error" });
+    const { title, location, date } = req.body;
+
+    if (!title || !location || !date) {
+      return res.status(400).json({ error: "title, location, date are required" });
+    }
+
+    const dt = new Date(date);
+    if (Number.isNaN(dt.getTime())) {
+      return res.status(400).json({ error: "Invalid date" });
+    }
+
+    const created = await Event.create({
+      title: String(title).trim(),
+      location: String(location).trim(),
+      date: dt,
+      owner: req.session.userId,
+    });
+
+    res.status(201).json(created);
+  } catch (err) {
+    console.error("POST /api/events error:", err);
+    res.status(500).json({ error: "Failed to create event" });
   }
+  const created = await Event.create({
+  title: String(title).trim(),
+  location: String(location).trim(),
+  date: dt,
+  owner: req.session.userId
+});
 });
 
-// POST /api/events
-router.post("/", async (req, res) => {
-  const { title, location, date } = req.body;
-  if (!title || !location || !date) {
-    return res.status(400).json({ error: "Missing required fields" });
-  }
-
-  const parsed = new Date(date);
-  if (Number.isNaN(parsed.getTime())) {
-    return res.status(400).json({ error: "Invalid date" });
-  }
-
+// PUT /api/events/:id  (LOGIN REQUIRED)
+router.put("/:id", requireAuth, requireOwner, async (req, res) => {
   try {
-    const db = getDB();
-    const doc = { title, location, date: parsed };
-    const result = await db.collection("events").insertOne(doc);
-    return res.status(201).json({ _id: result.insertedId, ...doc });
-  } catch {
-    return res.status(500).json({ error: "Database error" });
-  }
-});
+    const { title, location, date } = req.body;
 
-// PUT /api/events/:id
-router.put("/:id", async (req, res) => {
-  const { id } = req.params;
-  const { title, location, date } = req.body;
+    if (!title || !location || !date) {
+      return res.status(400).json({ error: "title, location, date are required" });
+    }
 
-  if (!isValidId(id)) return res.status(400).json({ error: "Invalid id" });
-  if (!title || !location || !date) return res.status(400).json({ error: "Missing required fields" });
+    const dt = new Date(date);
+    if (Number.isNaN(dt.getTime())) {
+      return res.status(400).json({ error: "Invalid date" });
+    }
 
-  const parsed = new Date(date);
-  if (Number.isNaN(parsed.getTime())) return res.status(400).json({ error: "Invalid date" });
-
-  try {
-    const db = getDB();
-    const result = await db.collection("events").updateOne(
-      { _id: new ObjectId(id) },
-      { $set: { title, location, date: parsed } }
+    const updated = await Event.findByIdAndUpdate(
+      req.params.id,
+      {
+        title: String(title).trim(),
+        location: String(location).trim(),
+        date: dt,
+      },
+      { new: true, runValidators: true }
     );
 
-    if (result.matchedCount === 0) return res.status(404).json({ error: "Event not found" });
-    return res.status(200).json({ message: "Event updated successfully" });
-  } catch {
-    return res.status(500).json({ error: "Database error" });
+    if (!updated) return res.status(404).json({ error: "Event not found" });
+    res.json(updated);
+  } catch (err) {
+    console.error("PUT /api/events/:id error:", err);
+    res.status(500).json({ error: "Failed to update event" });
   }
 });
 
-// DELETE /api/events/:id
-router.delete("/:id", async (req, res) => {
-  const { id } = req.params;
-  if (!isValidId(id)) return res.status(400).json({ error: "Invalid id" });
-
+// DELETE /api/events/:id  (LOGIN REQUIRED)
+router.delete("/:id", requireAuth, requireOwner, async (req, res) => {
   try {
-    const db = getDB();
-    const result = await db.collection("events").deleteOne({ _id: new ObjectId(id) });
-    if (result.deletedCount === 0) return res.status(404).json({ error: "Event not found" });
-    return res.status(200).json({ message: "Event deleted successfully" });
-  } catch {
-    return res.status(500).json({ error: "Database error" });
+    const deleted = await Event.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ error: "Event not found" });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("DELETE /api/events/:id error:", err);
+    res.status(500).json({ error: "Failed to delete event" });
   }
 });
 

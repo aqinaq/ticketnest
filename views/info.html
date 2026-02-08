@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Info – TicketNest</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap nav">
+    <a class="brand" href="/">
+      <span class="brand-badge" aria-hidden="true"></span>
+      <span>TicketNest</span>
+    </a>
+    <nav class="navlinks">
+      <a href="/" id="nav-home">Home</a>
+      <a href="/item.html" id="nav-events">Events</a>
+      <a href="/info.html" id="nav-info" class="active">Info</a>
+      <a href="/profile.html" id="nav-profile">Profile</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="hero">
+    <div class="card pad">
+      <h1 class="h1">About TicketNest</h1>
+      <p class="sub">
+        TicketNest is a ticket booking demo built with Express.js. It shows routing, forms, middleware, and an API-driven frontend.
+      </p>
+
+      <div class="pills">
+        <span class="pill">Search with query params</span>
+        <span class="pill">CRUD via API</span>
+        <span class="pill">Server-side POST form</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="grid">
+      <div class="card pad">
+        <h2>Features</h2>
+        <ul class="muted" style="margin:8px 0 0; padding-left:18px;">
+          <li>Search events using query parameters</li>
+          <li>View + manage events in one page</li>
+          <li>Send messages via a contact form</li>
+          <li>Read events from JSON API</li>
+        </ul>
+      </div>
+
+      <div class="card pad">
+        <h2>Contact Us</h2>
+        <p class="small muted">This form demonstrates POST request handling and server-side validation.</p>
+
+        <form class="form" action="/contact" method="POST">
+          <div>
+            <label>Name</label>
+            <input type="text" name="name" required />
+          </div>
+
+          <div>
+            <label>Email</label>
+            <input type="email" name="email" required />
+          </div>
+
+          <div>
+            <label>Message</label>
+            <textarea name="message" rows="5" required></textarea>
+          </div>
+
+          <button class="btn primary" type="submit">Send Message</button>
+        </form>
+      </div>
+
+      <div class="card pad">
+        <h2>API</h2>
+        <div class="small muted">
+          Events endpoint:
+          <div style="margin-top:8px;">
+            <code>/api/events</code> (GET/POST)<br/>
+            <code>/api/events?q=term</code> (GET search)<br/>
+            <code>/api/events/:id</code> (PUT/DELETE)
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <div>© 2026 TicketNest</div>
+    <div class="small">Built with Express.js · Frontend + API connected</div>
+  </div>
+</footer>
+
+</body>
+</html>

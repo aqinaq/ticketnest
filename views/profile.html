@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Profile – TicketNest</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap nav">
+    <a class="brand" href="/">
+      <span class="brand-badge" aria-hidden="true"></span>
+      <span>TicketNest</span>
+    </a>
+    <nav class="navlinks">
+      <a href="/" id="nav-home">Home</a>
+      <a href="/item.html" id="nav-events">Events</a>
+      <a href="/info.html" id="nav-info">Info</a>
+      <a href="/profile.html" id="nav-profile" class="active">Profile</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="card pad">
+      <h1 class="h1">Profile</h1>
+      <p class="sub">Your account information</p>
+
+      <div id="profileBox" class="notice">
+        Checking login status…
+      </div>
+
+      <div id="profileActions" class="btnrow" style="margin-top:14px;"></div>
+    </div>
+  </section>
+</main>
+
+<script>
+  const profileBox = document.getElementById("profileBox");
+  const actions = document.getElementById("profileActions");
+
+  async function loadProfile() {
+    try {
+      const res = await fetch("/auth/me");
+
+      // NOT logged in
+      if (res.status === 401) {
+        profileBox.innerHTML = `
+          <strong>You are not logged in.</strong>
+          <p class="small muted" style="margin-top:6px;">
+            Please sign in or create an account to access your profile.
+          </p>
+        `;
+
+        actions.innerHTML = `
+          <a class="btn primary" href="/login">Login</a>
+          <a class="btn" href="/signup">Sign up</a>
+        `;
+        return;
+      }
+
+      // Logged in
+      const me = await res.json();
+      profileBox.innerHTML = `
+        <div><strong>Username:</strong> ${me.username}</div>
+        <div class="small muted" style="margin-top:6px;">
+          User ID: ${me.userId}
+        </div>
+      `;
+
+      actions.innerHTML = `
+        <a class="btn" href="/item">Manage Events</a>
+        <a class="btn danger" href="/auth/logout">Logout</a>
+      `;
+
+    } catch (err) {
+      console.error(err);
+      profileBox.textContent = "Error loading profile.";
+    }
+  }
+
+  window.addEventListener("DOMContentLoaded", loadProfile);
+</script>
+</main>
+
+</body>
+</html>
