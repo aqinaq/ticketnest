@@ -156,7 +156,7 @@ Global 404 handler for API routes# ticketnest
 
 # TicketNest
 
-Live URL: https://ticketnest-3kbp.onrender.com/
+Live URL: https://t1cketnest.onrender.com/
 
 ## Description
 TicketNest is an online ticket booking system built with Node.js, Express, and MongoDB.
