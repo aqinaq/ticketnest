@@ -33,7 +33,7 @@ async function seed() {
   await mongoose.connect(MONGO_URI);
   await Event.deleteMany(); // clean old data
   await Event.insertMany(events);
-  console.log("✅ 21 events seeded");
+  console.log("21 events seeded");
   process.exit();
 }
 

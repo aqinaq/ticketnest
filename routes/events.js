@@ -9,21 +9,25 @@ function requireAuth(req, res, next) {
   }
   next();
 }
-async function requireOwner(req, res, next) {
+async function requireOwnerOrAdmin(req, res, next) {
   try {
-    const ev = await Event.findById(req.params.id);
-    if (!ev) return res.status(404).json({ error: "Event not found" });
+    const event = await Event.findById(req.params.id);
+    if (!event) return res.status(404).json({ error: "Not found" });
 
-    if (String(ev.owner) !== String(req.session.userId)) {
+    const isOwner = String(event.owner) === String(req.session.userId);
+    const isAdmin = req.session.role === "admin";
+
+    if (!isOwner && !isAdmin) {
       return res.status(403).json({ error: "Forbidden" });
     }
-    req.event = ev;
+
     next();
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: "Server error" });
+    res.status(500).json({ error: "Server error" });
   }
 }
+
 
 
 async function requireOwner(req, res, next) {
@@ -98,7 +102,7 @@ router.post("/", requireAuth, async (req, res) => {
 });
 
 // PUT /api/events/:id  (LOGIN REQUIRED)
-router.put("/:id", requireAuth, requireOwner, async (req, res) => {
+router.put("/:id", requireAuth, requireOwnerOrAdmin, async (req, res) => {
   try {
     const { title, location, date } = req.body;
 
@@ -130,7 +134,7 @@ router.put("/:id", requireAuth, requireOwner, async (req, res) => {
 });
 
 // DELETE /api/events/:id  (LOGIN REQUIRED)
-router.delete("/:id", requireAuth, requireOwner, async (req, res) => {
+router.delete("/:id", requireAuth, requireOwnerOrAdmin, async (req, res) => {
   try {
     const deleted = await Event.findByIdAndDelete(req.params.id);
     if (!deleted) return res.status(404).json({ error: "Event not found" });
