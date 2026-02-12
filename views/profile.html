@@ -37,24 +37,23 @@
     </div>
   </section>
 </main>
-
 <script>
   const profileBox = document.getElementById("profileBox");
   const actions = document.getElementById("profileActions");
 
   async function loadProfile() {
     try {
-      const res = await fetch("/auth/me");
+      const res = await fetch("/auth/me", { credentials: "include" });
+      const data = await res.json(); // ✅ read once
 
-      // NOT logged in
-      if (res.status === 401) {
+      // Not logged in
+      if (!res.ok || data.loggedIn === false) {
         profileBox.innerHTML = `
           <strong>You are not logged in.</strong>
           <p class="small muted" style="margin-top:6px;">
             Please sign in or create an account to access your profile.
           </p>
         `;
-
         actions.innerHTML = `
           <a class="btn primary" href="/login">Login</a>
           <a class="btn" href="/signup">Sign up</a>
@@ -63,11 +62,10 @@
       }
 
       // Logged in
-      const me = await res.json();
       profileBox.innerHTML = `
-        <div><strong>Username:</strong> ${me.username}</div>
+        <div><strong>Username:</strong> ${data.username}</div>
         <div class="small muted" style="margin-top:6px;">
-          User ID: ${me.userId}
+          User ID: ${data.userId}
         </div>
       `;
 
@@ -75,7 +73,6 @@
         <a class="btn" href="/item">Manage Events</a>
         <a class="btn danger" href="/auth/logout">Logout</a>
       `;
-
     } catch (err) {
       console.error(err);
       profileBox.textContent = "Error loading profile.";
@@ -84,6 +81,7 @@
 
   window.addEventListener("DOMContentLoaded", loadProfile);
 </script>
+
 </main>
 
 </body>
