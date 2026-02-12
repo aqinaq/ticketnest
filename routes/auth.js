@@ -6,6 +6,7 @@ const User = require("../models/User");
 function setSession(req, user) {
   req.session.userId = String(user._id);
   req.session.username = user.username;
+  req.session.role = user.role;
 }
 
 // POST /signup
@@ -65,5 +66,15 @@ router.get("/logout", (req, res) => {
     res.redirect("/");
   });
 });
+router.get("/me", (req, res) => {
+  if (!req.session?.userId) return res.status(200).json({ loggedIn: false });
+  res.json({
+    loggedIn: true,
+    userId: req.session.userId,
+    username: req.session.username,
+    role: req.session.role,
+  });
+});
+
 
 module.exports = router;
